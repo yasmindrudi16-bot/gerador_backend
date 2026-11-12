@@ -1,0 +1,2 @@
+-- Documentação do Modelo Relacional (DER)
+-- Tabela Usuario (1) <--- Tem N ---> Tabela Ocorrencia (N)

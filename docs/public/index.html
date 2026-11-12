@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoBack Studio - Local</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-6xl mx-auto">
+    <header class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-indigo-400">AutoBack Studio</h1>
+        <p class="text-sm text-slate-400">Cole seu SQL ou JSON e gere uma API Node.js + Prisma completa</p>
+      </div>
+      <button onclick="downloadZip()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-medium text-sm transition">
+        Baixar Projeto (.ZIP)
+      </button>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Entrada -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-semibold text-sm text-slate-300">Entrada do Banco de Dados</span>
+          <select id="inputType" onchange="loadExample()" class="bg-slate-800 border border-slate-700 rounded px-3 py-1 text-sm">
+            <option value="sql">SQL (CREATE TABLE)</option>
+            <option value="json">JSON Exemplo</option>
+          </select>
+        </div>
+
+        <textarea id="dbInput" rows="16" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-sm text-emerald-300 focus:outline-none focus:border-indigo-500"></textarea>
+
+        <button onclick="generateCode()" class="mt-4 bg-indigo-600 hover:bg-indigo-500 w-full py-2.5 rounded-lg font-semibold transition">
+          Gerar Back-end Agora
+        </button>
+      </div>
+
+      <!-- Saída -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-semibold text-sm text-slate-300">Arquivos Gerados</span>
+          <select id="fileSelector" onchange="showSelectedFile()" class="bg-slate-800 border border-slate-700 rounded px-3 py-1 text-sm max-w-xs">
+            <option value="">Clique em "Gerar Back-end"</option>
+          </select>
+        </div>
+
+        <pre id="codePreview" class="w-full h-[380px] overflow-auto bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-slate-300">Nenhum código gerado ainda.</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let generatedFiles = {};
+
+    const examples = {
+      sql: `CREATE TABLE users (\n  id INT PRIMARY KEY,\n  name VARCHAR(100) NOT NULL,\n  email VARCHAR(150) NOT NULL,\n  active BOOLEAN\n);\n\nCREATE TABLE products (\n  id INT PRIMARY KEY,\n  title VARCHAR(120) NOT NULL,\n  price DECIMAL(10,2) NOT NULL\n);`,
+      json: `{\n  "users": [\n    { "id": 1, "name": "Ana Silva", "email": "ana@email.com", "active": true }\n  ],\n  "products": [\n    { "id": 10, "title": "Teclado Mecânico", "price": 349.90 }\n  ]\n}`
+    };
+
+    function loadExample() {
+      const type = document.getElementById('inputType').value;
+      document.getElementById('dbInput').value = examples[type];
+    }
+
+    async function generateCode() {
+      const type = document.getElementById('inputType').value;
+      const content = document.getElementById('dbInput').value;
+
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, content })
+      });
+
+      const data = await res.json();
+      if (data.error) return alert(data.error);
+
+      generatedFiles = data.files;
+      const selector = document.getElementById('fileSelector');
+      selector.innerHTML = Object.keys(generatedFiles)
+        .map(f => `<option value="${f}">${f}</option>`)
+        .join('');
+
+      showSelectedFile();
+    }
+
+    function showSelectedFile() {
+      const file = document.getElementById('fileSelector').value;
+      document.getElementById('codePreview').textContent = generatedFiles[file] || '';
+    }
+
+    async function downloadZip() {
+      const type = document.getElementById('inputType').value;
+      const content = document.getElementById('dbInput').value;
+
+      const res = await fetch('/api/download-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, content })
+      });
+
+      if (!res.ok) return alert('Erro ao gerar ZIP');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'backend-gerado.zip';
+      a.click();
+    }
+
+    loadExample();
+  </script>
+</body>
+</html>
