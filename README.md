@@ -134,7 +134,3 @@ Para utilizá-la:
 O SQL2Node busca simplificar o processo de desenvolvimento backend, automatizando a criação de estruturas e operações CRUD a partir de um banco de dados já definido em SQL.
 
 Assim, desenvolvedores e estudantes podem economizar tempo, compreender melhor a organização de uma API e concentrar seus esforços na construção das funcionalidades de seus projetos.
-
----
-
-**SQL2Node — Transformando SQL em Backend!** 🚀
